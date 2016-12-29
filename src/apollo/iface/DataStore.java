@@ -35,16 +35,22 @@ public interface DataStore extends Remote {
 	public DataObject get(Key k) throws RemoteException,DataStoreException;
 
 	/**
+	* Return the number of rows in the specified table
+	*/
+	public int rows(String tableName) throws RemoteException,DataStoreException;
+
+
+	/**
 	* This has limited capabilities on purpose.  It returns every DataObject in the database
 	* in the default sort order.  Of course, more options will be needed, but
 	* this will work for simple applications.
 	* This uses its own Connection and Statement
 	*/
-	public Cursor selectAll(String tableName,int limit,int offset) throws RemoteException,
+	public Cursor selectAll(DataObject d,int limit,int offset) throws RemoteException,
 		DataStoreException;
 
 	/**
-	* Return the data specified by the view.
+	* Return the data specified by the view.  The view object must be created first
 	*/
 	public Cursor view(ViewObject v) throws RemoteException, DataStoreException;
 

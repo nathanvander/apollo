@@ -43,7 +43,10 @@ public interface Transaction extends Remote {
 
 	public Key insert(DataObject d) throws RemoteException,DataStoreException;
 
-	public void update(Key k, DataObject d) throws RemoteException,DataStoreException;
+	/**
+	* Key must be set
+	*/
+	public void update(DataObject d) throws RemoteException,DataStoreException;
 
 	public void delete(Key k)  throws RemoteException,DataStoreException;
 

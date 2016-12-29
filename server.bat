@@ -1,0 +1,2 @@
+rem Sample Batch File
+c:\java\jdk1.8.0_40\bin\java  -cp c:\java\jna\jna.jar;c:\java\jna\win32-x86-64.jar;c:\java\jna\jna-platform.jar;c:\java\projects\apollo17\src;c:\java\sqlite\sqlite-dll-win64-x64-3150200\;. apollo.server.DataStoreEngine

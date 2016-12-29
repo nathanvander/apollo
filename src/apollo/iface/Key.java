@@ -6,4 +6,9 @@ package apollo.iface;
 public class Key implements java.io.Serializable {
 	public String tableName;
 	public String id;
+	//constructor for ease of use
+	public Key(String tn,String k) {
+		tableName=tn;
+		id=k;
+	}
 }

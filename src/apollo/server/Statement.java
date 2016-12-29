@@ -33,7 +33,7 @@ public class Statement {
 	* Create a new Statement, given the connection and the sql.
 	*/
 	public Statement(Connection c,String sql) throws DataStoreException {
-		System.out.println("sql="+sql);
+		System.out.println(sql);
 		conn=c;
 		Connection.Handle ch=c.getHandle();
 		PointerByReference ppStmt=new PointerByReference();

@@ -8,19 +8,22 @@ package apollo.iface;
 *	Text: String
 *	integer: int or long
 *	real: float or double
-* Also booleans are allowed and represented as 0s and 1s.
+* Also booleans are allowed and represented as true and false.
 * Blobs are not used.
+*
+* This extends DataObject, which doesn't make a lot of sense because it doesn't use any of the
+* DataObject methods except fields().  However, this simplifies the interface of CursorObject.next()
 */
-public interface ViewObject extends java.io.Serializable {
+public interface ViewObject extends DataObject {
 	/**
 	* return the sql that underlies the View.  It starts with the word "SELECT";
-	* The fields in the view must be named with the keyword AS, that matches the field name in the
+	* The fields in the view must be named with the keyword AS, that matches the field names in the
 	* View object.
 	*/
 	public String getSQL();
 
 	/**
-	* This is the name of the view.
+	* This is the name of the view.  Don't use the same name as a table.
 	*/
 	public String getViewName();
 
@@ -31,5 +34,5 @@ public interface ViewObject extends java.io.Serializable {
 	* The first two columns (rowid, key) are understood to be on this list.  You don't need
 	* to list them but it won't hurt to do so.
 	*/
-	public String[] fields();
+	//public String[] fields();
 }

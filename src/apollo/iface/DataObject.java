@@ -5,8 +5,8 @@ package apollo.iface;
 * easy to add this to any object.
 *
 * Note that the first two fields must be:
-*	long ROWID (or OID).  This is the primary key, and is unique only in the table.
-*   String key.  This is the apollo assigned key which is unique among all objects stored
+*	long rowid.  This is the primary key, and is unique only in the table.
+*   String _key.  This is the apollo assigned key which is unique among all objects stored
 *
 * The only field types allowed are the SQLite types:
 *	Text: String
@@ -41,6 +41,7 @@ public interface DataObject extends java.io.Serializable {
 
 	/**
 	* Return the key of this object.  This is its unique id within the database.  Will be null if it is being inserted.
+	* Note: This isn't the name of the key field, it is the value of it.
 	*/
 	public String getKey();
 }

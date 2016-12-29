@@ -42,7 +42,7 @@ public class Connection {
 	}
 	//==============================================
 
-	protected Connection(String filename) throws DataStoreException {
+	public Connection(String filename) throws DataStoreException {
 		handle=open(filename);
 		id=counter.incrementAndGet();	//equivalent of ++counter;
 		time_created=System.currentTimeMillis();
