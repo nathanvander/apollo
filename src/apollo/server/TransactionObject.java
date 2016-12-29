@@ -118,10 +118,20 @@ public class TransactionObject implements Transaction {
 			conn.exec(sql3);
 
 			//also add the class name
-			String className=d.getClass().getName();
-			String sql4=MasterClass.insertSql(d.getTableName(),className);
-			conn.exec(sql4);
+			//first see if it already exists
+			String sql4=MasterClass.selectCountBeforeInsertSql(d.getTableName());
+			Statement st=new Statement(conn,sql4);
+			int c=0;
+			if (st.step()) {
+				c=st.getInt(0);
+			}
+			st.close();
 
+			if (c==0) {
+				String className=d.getClass().getName();
+				String sql5=MasterClass.insertSql(d.getTableName(),className);
+				conn.exec(sql5);
+			}
 			//done
 		} catch (DataStoreException dx) {
 			throw dx;

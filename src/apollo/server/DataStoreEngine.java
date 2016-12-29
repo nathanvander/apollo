@@ -10,20 +10,24 @@ import apollo.util.DateYMD;
 import java.math.BigDecimal;
 
 /**
-* This is the main class.  It holds a Connection with a timeout of 5 minutes for use by the listTables() and get() methods.
-* createTransaction() and selectAll() have their own connections.
+* This is the main class.  Because of SQLITE_BUSY result codes, every sql call needs its own transaction.
 */
 public class DataStoreEngine implements DataStore {
 	protected String dbFileName;
-	private transient Connection conn;
 
 	//this doesn't throw RemoteException because it can't be accessed remotely
 	public DataStoreEngine(String fn) throws DataStoreException {
 		dbFileName=fn;
-		conn=new Connection(fn);
-		//initialize the sequence object
-		Sequence.init(conn);
-		MasterClass.init(conn);
+
+		//initialize the sequence and master class objects
+		Connection c=new Connection(fn);
+		c.exec("BEGIN IMMEDIATE TRANSACTION");
+		//this will do up to 3 sql statements with either a SELECT, CREATE TABLE and INSERT
+		//or 2 selects
+		Sequence.init(c);
+		String sql1=MasterClass.createMasterTableSql();
+		c.exec(sql1);
+		c.exec("COMMIT TRANSACTION");
 	}
 
 	public int getLibVersionNumber() throws RemoteException {
@@ -47,23 +51,12 @@ public class DataStoreEngine implements DataStore {
 		return stub;
 	}
 
-	//used to keep the connection from getting stale
-	private void renewConnection() throws DataStoreException {
-		//first check the time on the connection
-		long now=System.currentTimeMillis();
-		//if it is more than 5 minutes old, then recreate it
-		if (now - conn.getTimeCreated() > (5 * 60 * 1000)) {
-			conn.close();
-			conn=new Connection(dbFileName);
-		}
-	}
-
-
 	//list all tables in the database and return a String array
 	//The top level interface will hold a Connection to do the listTables and get methods.
 	//It will hold the database only 5 minutes and then reopen it so the connection doesn't get stale
 	public String[] listTables() throws RemoteException,DataStoreException {
-		renewConnection();
+		Connection conn;	//local variable
+		conn=new Connection(dbFileName);
 
 		//find number of rows
 		int numTables=0;
@@ -81,9 +74,7 @@ public class DataStoreEngine implements DataStore {
 		String[] tables = new String[numTables];
 		String sql2="select name from sqlite_master where type='table'";
 		Statement stmt2=null;
-		if (numTables==0) {
-			return tables;
-		} else
+		if (numTables!=0) {
 			//then create a Statement
 			stmt2=new Statement(conn,sql2);
 			//step through it
@@ -95,18 +86,19 @@ public class DataStoreEngine implements DataStore {
 				//it is theoretically possible that this could overrun the array, but we just
 				//asked for a count of the tables
 			}
-
-			//close the statement, not the connection
+		}
+		if (stmt2!=null) {
 			stmt2.close();
-			//return result to client
-			return tables;
+		}
+		conn.close();
+		return tables;
 	}
 
 	/**
 	* Get the DataObject specified by the given key.  Return null if not found
 	*/
 	public DataObject get(Key k) throws RemoteException,DataStoreException {
-		renewConnection();
+		Connection conn=new Connection(dbFileName);
 
 		//get the classname
 		String className=MasterClass.getClassName(conn,k.tableName);
@@ -116,9 +108,9 @@ public class DataStoreEngine implements DataStore {
 
 		String sql="SELECT * FROM "+k.tableName+" WHERE _key='"+k.id+"'";
 		Statement st=new Statement(conn,sql);
+		Object o=null;
 		if (st.step()) {
-			//create a DataObject
-			Object o=null;
+
 			Class klaz=null;
 			try {
 				klaz=Class.forName(className);
@@ -171,29 +163,24 @@ public class DataStoreEngine implements DataStore {
 			}
 
 			}	//end for
-			return (DataObject)o;
-		} else {
-			//not found;
-			st.close();
-			return null;
-		}
+
+		} //else not found;
+		st.close();
+		conn.close();
+		return (DataObject)o;
 	}
 
+	//is this necessary?
 	public int rows(String tableName) throws RemoteException,DataStoreException {
-		//first check the time on the connection
-		long now=System.currentTimeMillis();
-		//if it is more than 5 minutes old, then recreate it
-		if (now - conn.getTimeCreated() > (5 * 60 * 1000)) {
-			conn.close();
-			conn=new Connection(dbFileName);
-		}
+		Connection conn=new Connection(dbFileName);
 
 			String sql="SELECT count(*) FROM "+tableName;
 			Statement stmt = new Statement(conn,sql);
 			stmt.step();
 			int i=stmt.getInt(0);
 			stmt.close();
-			return i;
+		conn.close();
+		return i;
 	}
 
 	public Cursor selectAll(DataObject d) throws RemoteException,

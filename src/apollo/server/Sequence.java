@@ -16,6 +16,7 @@ public class Sequence {
 
 	/**
 	* initialize the Singleton Object.  This is only called once upon startup.
+	* It is run inside a separate transaction.
 	*/
 	public synchronized static void init(Connection conn) throws DataStoreException {
 		//if already initialized, return
@@ -56,9 +57,7 @@ public class Sequence {
 		sql+="rowid INTEGER PRIMARY KEY, name TEXT, nextid INT, nextval TEXT)";
 		//System.out.println(sql);
 
-		conn.exec("BEGIN IMMEDIATE TRANSACTION");
 		conn.exec(sql);
-		conn.exec("COMMIT TRANSACTION");
 		//should this have an index on it?
 	}
 
@@ -67,9 +66,7 @@ public class Sequence {
 		String sql="INSERT INTO _sequence (name,nextid,nextval) VALUES ('_key',"+id+",'"+val+"')";
 		//System.out.println(sql);
 
-		conn.exec("BEGIN IMMEDIATE TRANSACTION");
 		conn.exec(sql);
-		conn.exec("COMMIT TRANSACTION");
 	}
 
 	/**

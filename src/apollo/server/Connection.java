@@ -91,7 +91,7 @@ public class Connection {
 			Pointer perr=pbr.getValue();
 			String err=perr.getString(0);
 			System.out.println("error in "+sql);
-			//System.out.println("error code "+rc);
+			System.out.println("error code ["+rc+"]");
 			throw new DataStoreException(err+" with "+sql,rc);
 		}
 	}

@@ -38,6 +38,12 @@ public class MasterClass {
 		return sql;
 	}
 
+	//does it exist already
+	public static String selectCountBeforeInsertSql(String tableName) {
+		String sql="SELECT COUNT(*) FROM _master WHERE name ='"+tableName+"'";
+		return sql;
+	}
+
 	//used when you drop a table
 	public static String deleteSql(String tableName) {
 		String sql="DELETE FROM _master WHERE name='"+tableName+"'";
