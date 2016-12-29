@@ -7,6 +7,7 @@ import apollo.iface.*;
 import java.lang.reflect.Field;
 import java.security.Permission;
 import apollo.util.DateYMD;
+import java.math.BigDecimal;
 
 /**
 * This is the main class.  It holds a Connection with a timeout of 5 minutes for use by the listTables() and get() methods.
@@ -143,6 +144,9 @@ public class DataStoreEngine implements DataStore {
 					String v=st.getString(j);
 					DateYMD date=DateYMD.fromString(v);
 					f.set(o,date);
+				} else if (ft.equals("java.math.BigDecimal")) {
+					String v=st.getString(j);
+					f.set(o,new java.math.BigDecimal(v));
 				} else if (ft.equals("int")) {
 					f.setInt(o,st.getInt(j));
 				} else if (ft.equals("long")) {

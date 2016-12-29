@@ -92,6 +92,9 @@ public class CursorObject implements Cursor {
 					String v=stmt.getString(j);
 					DateYMD date=DateYMD.fromString(v);
 					f.set(o,date);
+				} else if (ft.equals("java.math.BigDecimal")) {
+					String v=stmt.getString(j);
+					f.set(o,new java.math.BigDecimal(v));
 				} else if (ft.equals("int")) {
 					f.setInt(o,stmt.getInt(j));
 				} else if (ft.equals("long")) {
