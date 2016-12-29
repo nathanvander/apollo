@@ -196,6 +196,10 @@ public class DataStoreEngine implements DataStore {
 			return i;
 	}
 
+	public Cursor selectAll(DataObject d) throws RemoteException,
+		DataStoreException {
+		return selectAll(d,100,0);
+	}
 	/**
 	* This has limited capabilities on purpose.  It returns every DataObject in the database
 	* in the default sort order.  Of course, more options will be needed, but

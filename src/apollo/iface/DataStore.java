@@ -40,6 +40,8 @@ public interface DataStore extends Remote {
 	public int rows(String tableName) throws RemoteException,DataStoreException;
 
 
+	public Cursor selectAll(DataObject d) throws RemoteException,
+		DataStoreException;
 	/**
 	* This has limited capabilities on purpose.  It returns every DataObject in the database
 	* in the default sort order.  Of course, more options will be needed, but
