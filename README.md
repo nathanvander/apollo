@@ -8,3 +8,6 @@ To use it, create a DataObject for each Table, and a ViewObject for each custom 
 DataStore.createTransaction(), and then call the insert method with the DataObject.
 
 See the test code for examples of how to use it.
+
+Update 12/28/2016
+The code is complete and is usable.  We can call it version 1.0.
