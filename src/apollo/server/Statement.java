@@ -113,11 +113,11 @@ public class Statement {
 	}
 
 	public long getLong(int columnIndex)  {
-		return api.sqlite3_column_int(stmtHandle.getPointer(), columnIndex);
+		return api.sqlite3_column_int64(stmtHandle.getPointer(), columnIndex);
 	}
 
 	public double getDouble(int columnIndex) {
-		return api.sqlite3_column_int(stmtHandle.getPointer(), columnIndex);
+		return api.sqlite3_column_double(stmtHandle.getPointer(), columnIndex);
 	}
 
 	public String getString(int columnIndex) {
