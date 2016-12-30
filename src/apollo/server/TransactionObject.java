@@ -267,6 +267,7 @@ public class TransactionObject implements Transaction {
 					return null;
 				} else {
 					//no quotes needed
+					//it will be stored as a double in the database
 					return val.toPlainString();
 				}
 			} else if (ft.equals("int")) {
@@ -339,7 +340,7 @@ public class TransactionObject implements Transaction {
 	}
 
 	public void delete(Key k)  throws RemoteException,DataStoreException {
-		String sql="DELETE FROM "+k.tableName+" WHERE _key='"+id+"'";
+		String sql="DELETE FROM "+k.tableName+" WHERE _key='"+k.id+"'";
 		conn.exec(sql);
 	}
 

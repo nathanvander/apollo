@@ -66,6 +66,12 @@ public class Statement {
 		if (rc!=0) {
 			//don't throw an exception
 			System.out.println("warning: Statement.close() produced the following error: "+rc);
+			//do a stack trace so we can see where this is coming from
+			try {
+				throw new RuntimeException("sqlite is returning error "+rc);
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
 		}
 	}
 
@@ -123,7 +129,13 @@ public class Statement {
 	public String getString(int columnIndex) {
 		Pointer p=api.sqlite3_column_text(stmtHandle.getPointer(),columnIndex);
 		//int i=api.sqlite3_column_bytes(pstmt,columnIndex);
-		return p.getString(0).trim();
+		if (p==null) {
+			return null;
+			//literally a null pointer
+		} else {
+			String s=p.getString(0);
+			if (s==null) {return null;} else {return s.trim();}
+		}
 	}
 
 	public int getColumnCount() {

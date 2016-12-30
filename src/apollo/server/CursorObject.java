@@ -76,10 +76,12 @@ public class CursorObject implements Cursor {
 
 		//get number of columns
 		int cols=stmt.getColumnCount();
+		//System.out.println("DEBUG: CursorObject col count="+cols);
 		for (int j=0;j<cols;j++) {
 			//get the column name
 			//note that in the view object, this should be declared with AS in the list of columns in the select
 			String colName=stmt.getColumnName(j);
+			//System.out.println("DEBUG: CursorObject colname "+j+"="+colName);
 			try {
 				Field f=klaz.getDeclaredField(colName);
 				f.setAccessible(true);  //turn off security checks
@@ -87,7 +89,12 @@ public class CursorObject implements Cursor {
 
 				//this needs more types
 				if (ft.equals("java.lang.String")) {
-					f.set(o,stmt.getString(j));
+					String v=stmt.getString(j);
+					if (v!=null) {
+						//this causes a problem when the string is null
+						//i don't know why
+						f.set(o,v);
+					}
 				} else if (ft.equals("apollo.util.DateYMD")) {
 					String v=stmt.getString(j);
 					DateYMD date=DateYMD.fromString(v);
@@ -115,6 +122,7 @@ public class CursorObject implements Cursor {
 			} catch (DataStoreException dx) {
 				throw dx;
 			} catch (Exception x) {
+				x.printStackTrace();
 				throw new DataStoreException(x.getClass().getName()+": "+x.getMessage()+" when setting field "+colName,0);
 			}
 
