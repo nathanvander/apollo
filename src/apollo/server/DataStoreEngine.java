@@ -213,6 +213,58 @@ public class DataStoreEngine implements DataStore {
 		return stub;
 	}
 
+	/**
+	* Get a sequence number from the database.  The standard one is "_key".  Use this if you need
+	* a database generated sequence before an insert is made.
+	* This format is Base-12.
+	*/
+	public String nextId(String seqName) throws RemoteException, DataStoreException {
+		if (seqName==null) {return null;}
+		else if (seqName.equals("_key")) {
+			//then use the standard sequence object
+			Connection c=new Connection(dbFileName);
+			c.exec("BEGIN IMMEDIATE TRANSACTION");
+			String k=Sequence.getInstance().nextKey(c);
+			c.exec("COMMIT");
+			c.close();
+			return k;
+		} else {
+			Connection c=new Connection(dbFileName);
+			String sql="SELECT nextid,nextval FROM _sequence WHERE name = '"+seqName+"'";
+			Statement stmt = new Statement(c,sql);
+			int nid=-1;
+			String nval=null;
+			if (stmt.step()) {
+				nid=stmt.getInt(0);
+				nval=stmt.getString(1);
+			}
+			stmt.close();
+
+			String k=null;
+			c.exec("BEGIN IMMEDIATE TRANSACTION");
+			if (nid<1) {
+				int id=1;
+				nid=2;
+				k=Integer.toString(id,12);
+				String nextVal=Integer.toString(nid,12);
+				//insert the next number into the table
+				String insertSql="INSERT INTO _sequence (name,nextid,nextval) VALUES ('"+seqName+"',"+nid+",'"+nextVal+"')";
+				c.exec(insertSql);
+			} else {
+				k=nval;
+				//increment it
+				nid++;
+				String nextVal=Integer.toString(nid,12);
+				//update it
+				String updateSql="UPDATE _sequence SET nextid="+nid+",nextval='"+nextVal+"' WHERE name = '"+seqName+"'";
+				c.exec(updateSql);
+			}
+			c.exec("COMMIT");
+			c.close();
+			return k;
+		}
+	}
+
 	//======================================================================
 	//start up the Engine and bind it to the registry
     public static void main(String[] args) {
