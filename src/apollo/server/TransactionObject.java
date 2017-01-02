@@ -146,14 +146,25 @@ public class TransactionObject implements Transaction {
 	* This may need to have more specialized cases, like boolean.
 	*
 	* A trick here is primitive types are not null, whereas objects are unless specifically stated.
+	*
+	* Note that boolean types will be declared as "boolean" and store the literal "true"/"false".
+	* Other types will have the last part after the dot, like "DateYMD", or "BigDecimal"
 	*/
 	public static String sqliteType(String typeName) {
-		int dot=typeName.lastIndexOf('.');
-		if (dot>-1) {
-			//these are objects and therefore can be null
-			return typeName.substring(dot+1);
+		if (typeName.equals("java.lang.String")) {
+			return "TEXT";
+		} else if (typeName.equals("int") || typeName.equals("long")) {
+			return "INTEGER";
+		} else if (typeName.equals("float") || typeName.equals("double")) {
+			return "REAL";
 		} else {
-			return typeName+" NOT NULL";
+			int dot=typeName.lastIndexOf('.');
+			if (dot>-1) {
+				//these are objects and therefore can be null
+				return typeName.substring(dot+1);
+			} else {
+				return typeName+" NOT NULL";
+			}
 		}
 	}
 
