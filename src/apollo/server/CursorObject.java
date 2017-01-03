@@ -39,6 +39,13 @@ public class CursorObject implements Cursor {
 		this.sql=v.getSQL();
 	}
 
+	public CursorObject(String fn,DataObject d,String whereClause) {
+		filename=fn;
+		this.d=d;
+		String sql="SELECT * from "+d.getTableName()+" "+whereClause;
+		this.sql=sql;
+	}
+
 	public String getSql() throws RemoteException {
 		return sql;
 	}

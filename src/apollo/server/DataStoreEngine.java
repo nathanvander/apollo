@@ -204,6 +204,13 @@ public class DataStoreEngine implements DataStore {
 		return stub;
 	}
 
+	public Cursor selectWhere(DataObject d,String whereClause) throws RemoteException, DataStoreException {
+		CursorObject cx=new CursorObject(dbFileName,d,whereClause);
+		//we are not returning the transaction object, just its stub
+		Cursor stub =(Cursor)UnicastRemoteObject.exportObject(cx,0);
+		return stub;
+	}
+
 	/**
 	* Return the data specified by the view.
 	*/
