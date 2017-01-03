@@ -271,6 +271,17 @@ public class DataStoreEngine implements DataStore {
     public static void main(String[] args) {
 		String filename="vos2.sqlite";  //hard-coded, would be very easy to have it passed in
 
+		//we don't need this object here.  Any apps will either get it
+		//from the register or call create() directly
+		DataStore ds=create(filename);
+	}
+
+	/**
+	* Create a new DataSource and export it to the RMI registry.
+	* Don't call this more than once per process.  If you need another handle,
+	* go to the RMI registry to get it.
+	*/
+	public static DataStore create(String filename) {
 		//remove all security
 		System.setSecurityManager(
 			new SecurityManager() {
@@ -295,10 +306,13 @@ public class DataStoreEngine implements DataStore {
             Registry registry = LocateRegistry.getRegistry();
             registry.rebind(name, stub);
             System.out.println("DataStoreEngine bound to RMI Registry as '"+name+"'");
+            return ds;
         } catch (Exception e) {
             System.err.println("fatal DatabaseStore exception:");
             e.printStackTrace();
-        }
+            System.exit(1);
+		}
+		return null;
 	}
 
 }
