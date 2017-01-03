@@ -28,6 +28,7 @@ public class DataStoreEngine implements DataStore {
 		String sql1=MasterClass.createMasterTableSql();
 		c.exec(sql1);
 		c.exec("COMMIT TRANSACTION");
+		c.close();
 	}
 
 	public int getLibVersionNumber() throws RemoteException {
