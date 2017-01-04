@@ -157,7 +157,12 @@ public class TransactionObject implements Transaction {
 			return "INTEGER";
 		} else if (typeName.equals("float") || typeName.equals("double")) {
 			return "REAL";
-		} else {
+		} else if (typeName.equals("boolean")) {
+			//there isn't actually a boolean type in SQLite.  This will map to String
+			//and the field will display true or false
+			//we could map it to integer, but this is clearer and we don't care about disk space
+			return "BOOLEAN";
+		} else{
 			int dot=typeName.lastIndexOf('.');
 			if (dot>-1) {
 				//these are objects and therefore can be null

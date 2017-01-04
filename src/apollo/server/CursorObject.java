@@ -36,13 +36,20 @@ public class CursorObject implements Cursor {
 	public CursorObject(String fn,ViewObject v) {
 		filename=fn;
 		this.v=v;
-		this.sql=v.getSQL();
+
+		//problem.  If you have defined the ViewObject, you might as well use it.
+		//this just uses a regular data object
+		//this.sql=v.getSQL();
+		this.sql="SELECT * FROM "+v.getViewName();
 	}
 
+	//this can also be called on a ViewObject, if the ViewObject has defined the getTableName()
+	//to the View name.  There will be 2 where clauses, the where clause of the view and the where
+	//clause of the select.  The database is smart enough to figure this out, I think
 	public CursorObject(String fn,DataObject d,String whereClause) {
 		filename=fn;
 		this.d=d;
-		String sql="SELECT * from "+d.getTableName()+" "+whereClause;
+		String sql="SELECT * FROM "+d.getTableName()+" "+whereClause;
 		this.sql=sql;
 	}
 
@@ -104,11 +111,15 @@ public class CursorObject implements Cursor {
 					}
 				} else if (ft.equals("apollo.util.DateYMD")) {
 					String v=stmt.getString(j);
-					DateYMD date=DateYMD.fromString(v);
-					f.set(o,date);
+					if (v!=null) {
+						DateYMD date=DateYMD.fromString(v);
+						f.set(o,date);
+					}
 				} else if (ft.equals("java.math.BigDecimal")) {
 					String v=stmt.getString(j);
-					f.set(o,new java.math.BigDecimal(v));
+					if (v!=null) {
+						f.set(o,new java.math.BigDecimal(v));
+					}
 				} else if (ft.equals("int")) {
 					f.setInt(o,stmt.getInt(j));
 				} else if (ft.equals("long")) {
@@ -118,10 +129,12 @@ public class CursorObject implements Cursor {
 				} else if (ft.equals("boolean")) {
 					//expect it to be true
 					String v=stmt.getString(j);
-					if (v.equalsIgnoreCase("true") || v.equals("1")) {
-						f.setBoolean(o,true);
-					} else {
-						f.setBoolean(o,false);
+					if (v!=null) {
+						if (v.equalsIgnoreCase("true") || v.equals("1")) {
+							f.setBoolean(o,true);
+						} else {
+							f.setBoolean(o,false);
+						}
 					}
 				} else {
 					throw new DataStoreException("unknown type "+ft,0);
