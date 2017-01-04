@@ -3,6 +3,7 @@ import apollo.iface.*;
 import java.rmi.*;
 import java.lang.reflect.Field;
 import apollo.util.DateYMD;
+import apollo.util.DateYM;
 
 
 /**
@@ -113,6 +114,12 @@ public class CursorObject implements Cursor {
 					String v=stmt.getString(j);
 					if (v!=null) {
 						DateYMD date=DateYMD.fromString(v);
+						f.set(o,date);
+					}
+				} else if (ft.equals("apollo.util.DateYM")) {
+					String v=stmt.getString(j);
+					if (v!=null) {
+						DateYM date=DateYM.fromString(v);
 						f.set(o,date);
 					}
 				} else if (ft.equals("java.math.BigDecimal")) {

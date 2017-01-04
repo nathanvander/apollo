@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Random;
 import java.util.Date;
 import apollo.util.DateYMD;
+import apollo.util.DateYM;
 import java.math.BigDecimal;
 
 /**
@@ -158,7 +159,7 @@ public class TransactionObject implements Transaction {
 		} else if (typeName.equals("float") || typeName.equals("double")) {
 			return "REAL";
 		} else if (typeName.equals("boolean")) {
-			//there isn't actually a boolean type in SQLite.  This will map to String
+			//there isn't actually a boolean type in SQLite.  This will map to TEXT
 			//and the field will display true or false
 			//we could map it to integer, but this is clearer and we don't care about disk space
 			return "BOOLEAN";
@@ -271,6 +272,13 @@ public class TransactionObject implements Transaction {
 				}
 			} else if (ft.equals("apollo.util.DateYMD")) {
 				DateYMD val=(DateYMD)f.get(d);
+				if (val==null) {
+					return null;
+				} else {
+					return "'"+val.toString()+"'";
+				}
+			} else if (ft.equals("apollo.util.DateYM")) {
+				DateYM val=(DateYM)f.get(d);
 				if (val==null) {
 					return null;
 				} else {

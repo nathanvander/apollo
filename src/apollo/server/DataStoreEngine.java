@@ -7,6 +7,7 @@ import apollo.iface.*;
 import java.lang.reflect.Field;
 import java.security.Permission;
 import apollo.util.DateYMD;
+import apollo.util.DateYM;
 import java.math.BigDecimal;
 
 /**
@@ -139,6 +140,12 @@ public class DataStoreEngine implements DataStore {
 					String v=st.getString(j);
 					if (v!=null) {
 						DateYMD date=DateYMD.fromString(v);
+						f.set(o,date);
+					}
+				} else if (ft.equals("apollo.util.DateYM")) {
+					String v=st.getString(j);
+					if (v!=null) {
+						DateYM date=DateYM.fromString(v);
 						f.set(o,date);
 					}
 				} else if (ft.equals("java.math.BigDecimal")) {
