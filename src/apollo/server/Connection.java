@@ -92,6 +92,8 @@ public class Connection {
 			String err=perr.getString(0);
 			System.out.println("error in "+sql);
 			System.out.println("error code ["+rc+"]");
+			//this hangs the connection, so close it right away
+			close();
 			throw new DataStoreException(err+" with "+sql,rc);
 		}
 	}
@@ -109,6 +111,7 @@ public class Connection {
 		return closed;
 	}
 
+	//this keeps giving errors and I don't like it
 	public void close() {
 		int rc=api.sqlite3_close_v2(handle.getPointer());
 		closed=true;
@@ -124,7 +127,9 @@ public class Connection {
 
 	//for use by garbage collector
 	protected void finalize() {
-		close();
+		if (!closed) {
+			close();
+		}
 	}
 	//===============================================================
 	public interface SQLITE_API extends Library {

@@ -54,7 +54,6 @@ public class DataStoreEngine implements DataStore {
 
 	//list all tables in the database and return a String array
 	//The top level interface will hold a Connection to do the listTables and get methods.
-	//It will hold the database only 5 minutes and then reopen it so the connection doesn't get stale
 	public String[] listTables() throws RemoteException,DataStoreException {
 		Connection conn;	//local variable
 		conn=new Connection(dbFileName);
@@ -132,14 +131,21 @@ public class DataStoreEngine implements DataStore {
 
 				//this needs more types
 				if (ft.equals("java.lang.String")) {
-					f.set(o,st.getString(j));
+					String v=st.getString(j);
+					if (v!=null) {
+						f.set(o,st.getString(j));
+					}
 				} else if (ft.equals("apollo.util.DateYMD")) {
 					String v=st.getString(j);
-					DateYMD date=DateYMD.fromString(v);
-					f.set(o,date);
+					if (v!=null) {
+						DateYMD date=DateYMD.fromString(v);
+						f.set(o,date);
+					}
 				} else if (ft.equals("java.math.BigDecimal")) {
 					String v=st.getString(j);
-					f.set(o,new java.math.BigDecimal(v));
+					if (v!=null) {
+						f.set(o,new java.math.BigDecimal(v));
+					}
 				} else if (ft.equals("int")) {
 					f.setInt(o,st.getInt(j));
 				} else if (ft.equals("long")) {
@@ -149,10 +155,12 @@ public class DataStoreEngine implements DataStore {
 				} else if (ft.equals("boolean")) {
 					//expect it to be true
 					String v=st.getString(j);
-					if (v.equalsIgnoreCase("true") || v.equals("1")) {
-						f.setBoolean(o,true);
-					} else {
-						f.setBoolean(o,false);
+					if (v!=null) {
+						if (v.equalsIgnoreCase("true") || v.equals("1")) {
+							f.setBoolean(o,true);
+						} else {
+							f.setBoolean(o,false);
+						}
 					}
 				} else {
 					throw new DataStoreException("unknown type "+ft,0);

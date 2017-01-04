@@ -66,12 +66,6 @@ public class Statement {
 		if (rc!=0) {
 			//don't throw an exception
 			System.out.println("warning: Statement.close() produced the following error: "+rc);
-			//do a stack trace so we can see where this is coming from
-			try {
-				throw new RuntimeException("sqlite is returning error "+rc);
-			} catch (Exception x) {
-				x.printStackTrace();
-			}
 		}
 	}
 
@@ -159,7 +153,9 @@ public class Statement {
 
 	//for use by garbage collector
 	protected void finalize() {
-		close();
+		if (!closed) {
+			close();
+		}
 	}
 	//============================================
 	public interface SQLITE_API extends Library {
