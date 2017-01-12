@@ -8,6 +8,8 @@ import java.util.Date;
 import apollo.util.DateYMD;
 import apollo.util.DateYM;
 import java.math.BigDecimal;
+import java.awt.TextArea;
+import java.awt.Choice;
 
 /**
 * A Transaction is used to make changes to the database.  This is run in its own connection, so you can have
@@ -261,6 +263,7 @@ public class TransactionObject implements Transaction {
 				if (val==null) {
 					return val;
 				} else {
+					val=val.replaceAll("'","`");
 					return "'"+val+"'";
 				}
 			} else if (ft.equals("java.util.Date")) {
@@ -293,6 +296,24 @@ public class TransactionObject implements Transaction {
 					//no quotes needed
 					//it will be stored as a double in the database
 					return val.toPlainString();
+				}
+			} else if (ft.equals("java.awt.TextArea")) {
+				TextArea ta=(TextArea)f.get(d);
+				if (ta==null) {
+					return null;
+				} else {
+					String text=ta.getText();
+					//escape single quote
+					text=text.replaceAll("'","`");
+					return "'"+text+"'";
+				}
+			} else if (ft.equals("java.awt.Choice")) {
+				Choice ch=(Choice)f.get(d);
+				if (ch==null) {
+					return null;
+				} else {
+					String selected=ch.getSelectedItem();
+					return "'"+selected+"'";
 				}
 			} else if (ft.equals("int")) {
 				int iv=f.getInt(d);

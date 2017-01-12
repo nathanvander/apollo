@@ -2,9 +2,24 @@ package apollo.iface;
 import java.rmi.*;
 
 /**
-* A DataStore is a simplified view of a Database
+* A DataStore is a simplified view of a Database.
+*
+* VERSION added as of 1/12/17.  This will not change for minor bug fixes.  It will
+* be incremented for any changes to interfaces or functionality which code relies
+* on this should be aware of.
+*
+* Recent which require incrementing this are:
+*	- changing internal sequence numbering to base 8.  This is for personal, artistic
+*	reasons - base 8 is almost as human-friendly as base 10, but it is more useful to
+*   the computer.
+*  - change to DataObject interface to require displayNames() on fields.  This is so
+* 	dynamic dialogs can be created.
+*  - new types are allowed on DataObject fields.  See the notes there.
 */
 public interface DataStore extends Remote {
+	//this is the version
+	public final static float VERSION = 1.10F;
+
 	/**
 	* Get the version of the underlying SQLite library.
 	*/
@@ -64,7 +79,7 @@ public interface DataStore extends Remote {
 
 	/**
 	* Get a sequence number from the database.  The standard one is "_key".  Use this if you need
-	* a database generated sequence before an insert is made.
+	* a database generated sequence before an insert is made.  The id is in base-8.
 	*/
 	public String nextId(String seqName) throws RemoteException, DataStoreException;
 

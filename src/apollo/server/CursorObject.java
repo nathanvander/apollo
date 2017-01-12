@@ -4,6 +4,8 @@ import java.rmi.*;
 import java.lang.reflect.Field;
 import apollo.util.DateYMD;
 import apollo.util.DateYM;
+import java.awt.TextArea;
+import java.awt.Choice;
 
 
 /**
@@ -126,6 +128,31 @@ public class CursorObject implements Cursor {
 					String v=stmt.getString(j);
 					if (v!=null) {
 						f.set(o,new java.math.BigDecimal(v));
+					}
+				} else if (ft.equals("java.awt.TextArea")) {
+					String text=stmt.getString(j);
+					if (text!=null) {
+						java.awt.TextArea ta=new java.awt.TextArea(text,3,40,TextArea.SCROLLBARS_VERTICAL_ONLY);
+						ta.setName(colName);
+						f.set(o,ta);
+					}
+				} else if (ft.equals("java.awt.Choice")) {
+					//the choice list must already exist, we don't have enough
+					//info to recreate it
+					//so first get the object
+					Choice ch=(Choice)f.get(o);
+					if (ch==null) {
+						System.out.println("Warning: the Choice field for "+colName+" in "+klaz.getName()+" is null. This should have been set");
+					} else {
+						String text=stmt.getString(j);
+						if (text!=null) {
+							ch.select(text);
+							//now double check it
+							String selected=ch.getSelectedItem();
+							if (!text.equals(selected)) {
+								System.out.println("Warning: the value of the Choice field was supposed to be set to "+text+" but the selected value is "+selected);
+							}
+						}
 					}
 				} else if (ft.equals("int")) {
 					f.setInt(o,stmt.getInt(j));
