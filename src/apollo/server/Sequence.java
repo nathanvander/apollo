@@ -5,13 +5,13 @@ import apollo.iface.*;
 /**
 * The Sequence class manages sequence numbers from the Database.  There is only 1
 * sequence per JVM, so this is implemented as a Singleton.
-* It uses base 12, where "a" means 10, and "b" means 11.
+* I changed it to use base 8, as a personal preference.
 *
 * This is called _sequence because it is not a user table.  The name of the sequence is _key.
 */
 
 public class Sequence {
-	public final static int BASE12=12; //for emphasis
+	public final static int BASE8=8; //for emphasis
 	private static Sequence seq;
 
 	/**
@@ -26,7 +26,7 @@ public class Sequence {
 			//this should only be occur once, ever
 			createSequenceTable(conn);
 			int nid=1;
-			String v=Integer.toString(nid,BASE12);
+			String v=Integer.toString(nid,BASE8);
 			insertKey(conn,nid,v);
 			//create the sequence object
 			seq=new Sequence(nid);
@@ -95,7 +95,7 @@ public class Sequence {
 
 	private Sequence(int i) {
 		nextId=new AtomicInteger(i);
-		nextVal=Integer.toString(i,BASE12);
+		nextVal=Integer.toString(i,BASE8);
 	}
 
 	/**
@@ -111,8 +111,8 @@ public class Sequence {
 
 		//now get ready for the next call
 		nextId.incrementAndGet();
-		//set nextVal to the value of the string in Base 12
-		nextVal=Integer.toString(nextId.intValue(),BASE12);
+		//set nextVal to the value of the string in Base
+		nextVal=Integer.toString(nextId.intValue(),BASE8);
 		//store the nextkey in the database
 		updateKey(conn,nextId.intValue(),nextVal);
 

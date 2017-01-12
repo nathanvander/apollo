@@ -65,7 +65,6 @@ public interface DataStore extends Remote {
 	/**
 	* Get a sequence number from the database.  The standard one is "_key".  Use this if you need
 	* a database generated sequence before an insert is made.
-	* This format is Base-12.
 	*/
 	public String nextId(String seqName) throws RemoteException, DataStoreException;
 

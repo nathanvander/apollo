@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 * This is the main class.  Because of SQLITE_BUSY result codes, every sql call needs its own transaction.
 */
 public class DataStoreEngine implements DataStore {
+	public final static int BASE8=8; //for emphasis
 	protected String dbFileName;
 
 	//this doesn't throw RemoteException because it can't be accessed remotely
@@ -239,7 +240,7 @@ public class DataStoreEngine implements DataStore {
 	/**
 	* Get a sequence number from the database.  The standard one is "_key".  Use this if you need
 	* a database generated sequence before an insert is made.
-	* This format is Base-12.
+	* This format is Base-8.
 	*/
 	public String nextId(String seqName) throws RemoteException, DataStoreException {
 		if (seqName==null) {return null;}
@@ -268,8 +269,8 @@ public class DataStoreEngine implements DataStore {
 			if (nid<1) {
 				int id=1;
 				nid=2;
-				k=Integer.toString(id,12);
-				String nextVal=Integer.toString(nid,12);
+				k=Integer.toString(id,BASE8);
+				String nextVal=Integer.toString(nid,BASE8);
 				//insert the next number into the table
 				String insertSql="INSERT INTO _sequence (name,nextid,nextval) VALUES ('"+seqName+"',"+nid+",'"+nextVal+"')";
 				c.exec(insertSql);
@@ -277,7 +278,7 @@ public class DataStoreEngine implements DataStore {
 				k=nval;
 				//increment it
 				nid++;
-				String nextVal=Integer.toString(nid,12);
+				String nextVal=Integer.toString(nid,BASE8);
 				//update it
 				String updateSql="UPDATE _sequence SET nextid="+nid+",nextval='"+nextVal+"' WHERE name = '"+seqName+"'";
 				c.exec(updateSql);
