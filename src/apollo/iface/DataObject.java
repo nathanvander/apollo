@@ -51,7 +51,7 @@ public interface DataObject extends java.io.Serializable {
 	* return a list of user-friendly display names.  For example "First Name", instead of "firstname";
 	* this must be the same length as fields()
 	*/
-	public String[] displayName();
+	public String[] displayNames();
 
 	/**
 	* This is the index for the DataObject.  This determines the order that it is returned
