@@ -16,7 +16,6 @@ import java.awt.Choice;
 * This is the main class.  Because of SQLITE_BUSY result codes, every sql call needs its own transaction.
 */
 public class DataStoreEngine implements DataStore {
-	public final static int BASE8=8; //for emphasis
 	protected String dbFileName;
 
 	//this doesn't throw RemoteException because it can't be accessed remotely
