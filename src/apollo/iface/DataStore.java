@@ -4,6 +4,10 @@ import java.rmi.*;
 /**
 * A DataStore is a simplified view of a Database.
 *
+* Changes as of 1/19/2017:
+*	removed sequence object for simplicity
+*	added _audit table to record changes to data
+*
 * VERSION added as of 1/12/17.  This will not change for minor bug fixes.  It will
 * be incremented for any changes to interfaces or functionality which code relies
 * on this should be aware of.
@@ -18,7 +22,7 @@ import java.rmi.*;
 */
 public interface DataStore extends Remote {
 	//this is the version
-	public final static float VERSION = 1.10F;
+	public final static float VERSION = 1.20F;
 
 	/**
 	* Get the version of the underlying SQLite library.
@@ -76,12 +80,5 @@ public interface DataStore extends Remote {
 	*  The where clause should also specify the order and the limit, if any
 	*/
 	public Cursor selectWhere(DataObject d,String whereClause) throws RemoteException, DataStoreException;
-
-	/**
-	* Get a sequence number from the database.  The standard one is "_key".  Use this if you need
-	* a database generated sequence before an insert is made.  The id is in base-8.
-	*/
-	public String nextId(String seqName) throws RemoteException, DataStoreException;
-
 
 }

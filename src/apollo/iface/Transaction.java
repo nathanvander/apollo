@@ -44,11 +44,14 @@ public interface Transaction extends Remote {
 	public Key insert(DataObject d) throws RemoteException,DataStoreException;
 
 	/**
-	* Key must be set
+	* Update the object.  Must provide old state before doing so.
 	*/
-	public void update(DataObject d) throws RemoteException,DataStoreException;
+	public void update(DataObject old,DataObject nu) throws RemoteException,DataStoreException;
 
-	public void delete(Key k)  throws RemoteException,DataStoreException;
+	/**
+	* Delete the object.  Must provide old state of object before doing so.
+	*/
+	public void delete(DataObject old)  throws RemoteException,DataStoreException;
 
 	public void createView(ViewObject v) throws RemoteException,DataStoreException;
 

@@ -18,12 +18,6 @@ import apollo.iface.DataStoreException;
 *	class_name TEXT
 */
 public class MasterClass {
-	//this doesn't hold data so this will just generate the sql
-
-	//it doesn't hurt to call this more than once
-	public synchronized static void init(Connection conn) throws DataStoreException {
-		conn.exec(createMasterTableSql());
-	}
 
 	//this will automatically create a rowid column, but that's ok
 	public static String createMasterTableSql() {

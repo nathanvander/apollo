@@ -10,6 +10,7 @@ import apollo.util.DateYM;
 import java.math.BigDecimal;
 import java.awt.TextArea;
 import java.awt.Choice;
+import apollo.util.DynamicSql;
 
 /**
 * A Transaction is used to make changes to the database.  This is run in its own connection, so you can have
@@ -87,20 +88,24 @@ public class TransactionObject implements Transaction {
 			StringBuilder sql=new StringBuilder("CREATE TABLE IF NOT EXISTS "+d.getTableName()+" (");
 			//add the primary key
 			sql.append(" rowid INTEGER PRIMARY KEY,");
-			//add our dataobject key.  This starts with an underscore so it doesn't conflict with sql keyword KEY
-			sql.append(" _key TEXT UNIQUE");
+
+			boolean first=true;
 			for (int i=0; i< columns.length; i++) {
 				String col=columns[i];
 				Field f=k.getField(col);
 				String typeName=f.getType().getName();
 				String declaredType=sqliteType(typeName);
 
-				if (col.equalsIgnoreCase("rowid") || col.equalsIgnoreCase("_key") ) {
+				if (col.equalsIgnoreCase("rowid") ) {
 					continue;
-				} else {
-					if (i<columns.length) { sql.append(", "); }
-					sql.append(col+" "+declaredType);
 				}
+
+				if (first) {
+					first=false;
+				} else {
+					sql.append(",");
+				}
+				sql.append(col+" "+declaredType);
 			}
 			sql.append(")");
 
@@ -116,9 +121,9 @@ public class TransactionObject implements Transaction {
 			}
 
 			//also index by key
-			String sql3="CREATE UNIQUE INDEX IF NOT EXISTS idx_"+d.getTableName()+"_key ON "+d.getTableName()+"("+"_key"+")";
+			//String sql3="CREATE UNIQUE INDEX IF NOT EXISTS idx_"+d.getTableName()+"_key ON "+d.getTableName()+"("+"_key"+")";
 			//System.out.println(sql3);
-			conn.exec(sql3);
+			//conn.exec(sql3);
 
 			//also add the class name
 			//first see if it already exists
@@ -181,6 +186,8 @@ public class TransactionObject implements Transaction {
 	*/
 	public void dropTable(DataObject d) throws RemoteException,DataStoreException {
 		System.out.println("DEBUG: in TransactionObject.dropTable");
+
+		//first, check the number of rows in it
 		String sql="select count(rowid) from "+d.getTableName();
 		int rows=0;
 		Statement stmt=new Statement(conn,sql);
@@ -192,15 +199,22 @@ public class TransactionObject implements Transaction {
 			throw new DataStoreException("trying to drop table "+d.getTableName()+" but it is not empty",0);
 		}
 
+		//get the drop table command
 		String sql2="DROP TABLE IF EXISTS "+d.getTableName();
+
+		//record audit info.  This will do an insert into the audit table
+		String sql2audit=Audit.auditDrop(d.getTableName(),sql2);
+		conn.exec(sql2audit);
+
+		//now actually drop it
 		conn.exec(sql2);
 
 		String sql3="DROP INDEX IF EXISTS idx_"+d.getTableName();
 		conn.exec(sql3);
 
 		//also index by key
-		String sql4="DROP INDEX IF EXISTS idx_"+d.getTableName()+"_key";
-		conn.exec(sql4);
+		//String sql4="DROP INDEX IF EXISTS idx_"+d.getTableName()+"_key";
+		//conn.exec(sql4);
 
 		//and drop master class entry
 		String sql5=MasterClass.deleteSql(d.getTableName());
@@ -216,177 +230,55 @@ public class TransactionObject implements Transaction {
 			System.out.println("[DEBUG] in TransactionObject.insert, DataObject is null");
 			throw new DataStoreException("trying to insert a null data object",0);
 		}
-		//get a sequence number
-		String k=Sequence.getInstance().nextKey(conn);
 
-		//generate the insert statement
-		StringBuffer sql=new StringBuffer();
-		sql.append("INSERT INTO "+d.getTableName()+" \n");
-		sql.append("("+fieldNames(d)+")"+" \n");
-		sql.append("VALUES ("+"\n");
-		sql.append("'"+k+"'\n");		//key
-
-		String[] fields=d.fields();
-		Field f=null;
-
-		for (int i=0;i<fields.length;i++) {
-			if (fields[i].equalsIgnoreCase("rowid") || fields[i].equalsIgnoreCase("_key") ) {
-				continue;
-			}
-			String fn=fields[i];
-			sql.append(","+getFieldValue(d,fn)+"\n");
-		}
-		sql.append(")");
+		String sql=DynamicSql.generateInsertSql(d);
 
 		//now execute it
 		conn.exec(sql.toString());
+		long k=conn.lastInsertRowID();
 
 		//return the key
 		return new Key(d.getTableName(),k);
 	}
 
-	/**
-	* Get the value of the field, escaping it if needed.
-	*/
-	private static String getFieldValue(DataObject d,String fieldName) throws DataStoreException {
-		try {
-			Field f=d.getClass().getDeclaredField(fieldName);
-			f.setAccessible(true);  //turn off security checks
-			String ft=f.getType().getName();
-
-			//we only do the most common types
-			//other types that may be needed:
-			//	Boolean (capital B),
-			//	Integer (capital i)
-			if (ft.equals("java.lang.String")) {
-				String val=(String)f.get(d);
-				if (val==null) {
-					return val;
-				} else {
-					val=val.replaceAll("'","`");
-					return "'"+val+"'";
-				}
-			} else if (ft.equals("java.util.Date")) {
-				Date val=(Date)f.get(d);
-				if (val==null) {
-					return null;
-				} else {
-					return "'"+val.toString()+"'";
-				}
-			} else if (ft.equals("apollo.util.DateYMD")) {
-				DateYMD val=(DateYMD)f.get(d);
-				if (val==null) {
-					return null;
-				} else {
-					return "'"+val.toString()+"'";
-				}
-			} else if (ft.equals("apollo.util.DateYM")) {
-				DateYM val=(DateYM)f.get(d);
-				if (val==null) {
-					return null;
-				} else {
-					return "'"+val.toString()+"'";
-				}
-			} else if (ft.equals("java.math.BigDecimal")) {
-				//use for currency fields
-				BigDecimal val=(BigDecimal)f.get(d);
-				if (val==null) {
-					return null;
-				} else {
-					//no quotes needed
-					//it will be stored as a double in the database
-					return val.toPlainString();
-				}
-			} else if (ft.equals("java.awt.TextArea")) {
-				TextArea ta=(TextArea)f.get(d);
-				if (ta==null) {
-					return null;
-				} else {
-					String text=ta.getText();
-					//escape single quote
-					text=text.replaceAll("'","`");
-					return "'"+text+"'";
-				}
-			} else if (ft.equals("java.awt.Choice")) {
-				Choice ch=(Choice)f.get(d);
-				if (ch==null) {
-					return null;
-				} else {
-					String selected=ch.getSelectedItem();
-					return "'"+selected+"'";
-				}
-			} else if (ft.equals("int")) {
-				int iv=f.getInt(d);
-				return String.valueOf(iv);
-			} else if (ft.equals("long")) {
-				long lv=f.getLong(d);
-				return String.valueOf(lv);
-			} else if (ft.equals("float")) {
-				float fv=f.getFloat(d);
-				return String.valueOf(fv);
-			} else if (ft.equals("double")) {
-				double dv=f.getDouble(d);
-				return String.valueOf(dv);
-			} else if (ft.equals("boolean")) {
-				//just use true and false.  Space is cheap
-				boolean bv=f.getBoolean(d);
-				return "'"+bv+"'";
-			} else {
-				throw new DataStoreException("unknown type "+ft,0);
-			}
-		} catch (Exception x) {
-			throw new DataStoreException(x.getClass().getName()+": "+x.getMessage()+", when getting the value of the field "+fieldName,0);
-		}
-	}
-
-	/**
-	* Return a String, which is the list of field names, separated by a comma.
-	* We get this from DataObject, but check the names, because we don't insert a rowid, and we do insert
-	* a _key.
-	*/
-	private static String fieldNames(DataObject d) {
-		//hardcode the field _key in here
-		StringBuilder sb=new StringBuilder("_key");
-		String[] fields=d.fields();
-
-		for (int i=0;i<fields.length;i++) {
-			if (fields[i].equalsIgnoreCase("rowid") || fields[i].equalsIgnoreCase("_key") ) {
-				continue;
-			}
-			sb.append(","+fields[i]);
-		}
-		return sb.toString();
-	}
-
-	public void update(DataObject d) throws RemoteException,DataStoreException {
-		if (d==null || d.getKey()==null) {
-			throw new DataStoreException("cannot update because key is null",0);
+	public void update(DataObject old,DataObject nu) throws RemoteException,DataStoreException {
+		if (nu==null || nu.getID()<1) {
+			throw new DataStoreException("cannot update because id is "+nu.getID(),0);
 		}
 
 		//generate the update sql
-		StringBuilder sql=new StringBuilder();
-		String[] fields=d.fields();
-		sql.append("UPDATE "+d.getTableName()+" SET \n");
-		for (int i=0;i<fields.length;i++) {
-			if (fields[i].equalsIgnoreCase("rowid") || fields[i].equalsIgnoreCase("_key") ) {
-				continue;
-			}
+		String updateSql=DynamicSql.generateUpdateSql(nu);
 
-			if (i!=0) {sql.append(",");}
-			String value=getFieldValue(d,fields[i]);
-			sql.append(fields[i]+"="+value+"\n");
-		}
+		//record audit info.  This will do an insert into the audit table
+		String auditSql=Audit.auditUpdate(nu.getID(),nu.getTableName(),old, updateSql);
+		conn.exec(auditSql);
 
-		//add the where clause
-		sql.append("WHERE _key='"+d.getKey()+"'"+"\n");
 		//now execute it
 		//rows is the number of rows changed - should be 1
-		int rows=conn.exec(sql.toString());
+		int rows=conn.exec(updateSql);
+		if (rows!=1) {
+			System.out.println("WARNING: the command "+updateSql+" updated "+rows+" rows");
+		}
 	}
 
-	public void delete(Key k)  throws RemoteException,DataStoreException {
-		String sql="DELETE FROM "+k.tableName+" WHERE _key='"+k.id+"'";
-		conn.exec(sql);
+	//record audit info before deleting
+	//this requires the old state of the object before deleting
+	public void delete(DataObject old)  throws RemoteException,DataStoreException {
+		//double check audit info
+		if (old==null || old.getID()<1) {
+			throw new DataStoreException("must provide old state of object before delete is allowed",0);
+		}
+
+		String deleteSql="DELETE FROM "+old.getTableName()+" WHERE rowid="+old.getID();
+
+		//get the audit info
+		String auditSql=Audit.auditDelete(old.getID(),old.getTableName(),old, deleteSql);
+		conn.exec(auditSql);
+
+		int rows=conn.exec(deleteSql);
+		if (rows!=1) {
+			System.out.println("WARNING: the command "+deleteSql+" deleted "+rows+" rows");
+		}
 	}
 
 	//a view is kind of like a table

@@ -4,9 +4,8 @@ package apollo.iface;
 * Any DataObject can be stored in the DataStore.  Since this is an interface, it will be
 * easy to add this to any object.
 *
-* Note that the first two fields must be:
-*	long rowid.  This is the primary key, and is unique only in the table.
-*   String _key.  This is the apollo assigned key which is unique among all objects stored
+* Note that the first field must be:
+*	long rowid.  This is the primary key.
 *
 * The field types can be any of the following:
 *	String (maps to TEXT)
@@ -42,8 +41,8 @@ public interface DataObject extends java.io.Serializable {
 	*   The elements in the array returned are not sorted and are not in any particular order.
 
 	* Note that if a field in the object is not listed here, it won't be stored.
-	* The first two columns (rowid, key) are understood to be on this list.  You don't need
-	* to list them but it won't hurt to do so.
+	* The first column (rowid) is  understood to be on this list.  You don't need
+	* to list it but it won't hurt to do so.
 	*/
 	public String[] fields();
 
@@ -62,8 +61,8 @@ public interface DataObject extends java.io.Serializable {
 	public String index();
 
 	/**
-	* Return the key of this object.  This is its unique id within the database.  Will be null if it is being inserted.
-	* Note: This isn't the name of the key field, it is the value of it.
+	* Get the row id of the object.
 	*/
-	public String getKey();
+	public long getID();
+
 }
