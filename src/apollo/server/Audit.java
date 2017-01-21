@@ -15,6 +15,8 @@ import apollo.util.DynamicSql;
 *
 * This won't be enough information to reverse a transaction, but it will show you
 * what has changed.
+*
+* Update:  SQLite doesn't like me calling a field "table", so I changed it to "_table".
 */
 public class Audit {
 	//this class isn't meant to be instantiated.
@@ -22,7 +24,7 @@ public class Audit {
 	public long rowid;				//the rowid of this table only
 	public java.sql.Timestamp timestamp;	//the timestamp of the audit entry.  May be different from the transaction date/time
 	public long oid;				//the object id.  may be zero if it doesn't apply
-	public String table;
+	public String _table;
 	public String undo_sql;		//the sql command that will undo this operation, can be null
 	public String new_sql;
 
@@ -40,7 +42,7 @@ public class Audit {
 		sql.append("rowid INTEGER PRIMARY KEY,");
 		sql.append("timestamp TEXT,");
 		sql.append("oid INTEGER,");
-		sql.append("table TEXT,");
+		sql.append("_table TEXT,");
 		sql.append("undo_sql TEXT,");
 		sql.append("new_sql TEXT)");
 		return sql.toString();
@@ -56,7 +58,7 @@ public class Audit {
 			throw new IllegalArgumentException(dropSql);
 		}
 		StringBuffer sql=new StringBuffer("INSERT INTO _audit (");
-		sql.append("timestamp,oid,table,new_sql) ");
+		sql.append("timestamp,oid,_table,new_sql) ");
 		sql.append("VALUES ( datetime(),0,'"+table+"','"+dropSql+"')");
 		return sql.toString();
 	}
@@ -77,7 +79,7 @@ public class Audit {
 		String newUpdateSql2=escapeSingleQuote(updateSql);
 
 		StringBuffer sql=new StringBuffer("INSERT INTO _audit (");
-		sql.append("timestamp,oid,table,undo_sql,new_sql) ");
+		sql.append("timestamp,oid,_table,undo_sql,new_sql) ");
 		sql.append("VALUES ( datetime(),"+oid+",'"+table+"','"+oldUpdateSql2+"','"+newUpdateSql2+"')");
 		return sql.toString();
 	}
@@ -97,7 +99,7 @@ public class Audit {
 		String deleteSql2=escapeSingleQuote(deleteSql);
 
 		StringBuffer sql=new StringBuffer("INSERT INTO _audit (");
-		sql.append("timestamp,oid,table,undo_sql,new_sql) ");
+		sql.append("timestamp,oid,_table,undo_sql,new_sql) ");
 		sql.append("VALUES ( datetime(),"+oid+",'"+table+"','"+oldInsertSql2+"','"+deleteSql2+"')");
 		return sql.toString();
 	}
