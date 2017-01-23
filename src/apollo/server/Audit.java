@@ -31,9 +31,13 @@ public class Audit {
 	public static String getTableName() {return "_audit";}
 
 	//replace all single-quotes with back quotes
+	//also escape new lines with a space
 	public static String escapeSingleQuote(String s) {
 		if (s==null) {return null;}
-		else {return s.replaceAll("'","`");}
+		else {
+			s = s.replaceAll("\\r?\\n"," ");
+			return s.replaceAll("'","`");
+		}
 	}
 
 	//return the sql that will create this audit table
