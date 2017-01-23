@@ -5,7 +5,7 @@ package apollo.util;
 * It is pretty much the same as DateYMD, without the date part.
 */
 
-public class DateYM implements Comparable, java.io.Serializable {
+public class DateYM implements Comparable, java.io.Serializable, Cloneable {
 	int year;	//4 digit year
 	int month;  //month from 1..12
 
@@ -122,5 +122,15 @@ public class DateYM implements Comparable, java.io.Serializable {
 		} catch (Exception x) {
 			throw new IllegalArgumentException("invalid format: "+s);
 		}
+	}
+
+	//==================
+	/**
+	* @Override Object.clone()
+	*
+	* Every object that will be serializable should have a clone method so you can do a copy by value instead of by reference.
+	*/
+	public DateYM clone() {
+		return new DateYM(year,month);
 	}
 }

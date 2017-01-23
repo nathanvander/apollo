@@ -23,7 +23,7 @@ package apollo.iface;
 *		for enumerated values).
 *
 */
-public interface DataObject extends java.io.Serializable {
+public interface DataObject extends java.io.Serializable, Cloneable {
 
 	/**
 	* return the name of the table.  It is usually the same name as the object
@@ -64,5 +64,11 @@ public interface DataObject extends java.io.Serializable {
 	* Get the row id of the object.
 	*/
 	public long getID();
+
+	/**
+	* Do a deep copy of this.  This may not be necessary is some cases, but
+	* it makes it easier if you plan on updating or deleting
+	*/
+	public DataObject clone();
 
 }

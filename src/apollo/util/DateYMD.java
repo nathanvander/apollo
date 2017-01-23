@@ -4,7 +4,7 @@ package apollo.util;
 * This handles dates in the format YYYY-MM-DD, which is a partial ISO 8601 format.
 */
 
-public class DateYMD implements Comparable, java.io.Serializable {
+public class DateYMD implements Comparable, java.io.Serializable, Cloneable {
 	int year;	//4 digit year
 	int month;  //month from 1..12
 	int day;
@@ -113,5 +113,9 @@ public class DateYMD implements Comparable, java.io.Serializable {
 		} catch (Exception x) {
 			throw new IllegalArgumentException("invalid format: "+s);
 		}
+	}
+
+	public DateYMD clone() {
+		return new DateYMD(year,month,day);
 	}
 }
