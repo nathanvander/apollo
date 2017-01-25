@@ -15,7 +15,7 @@ public interface Transaction extends Remote {
 	/**
 	* This both opens the connection and begins the transaction
 	*/
-	public void begin() throws RemoteException, DataStoreException;
+	public void begin() throws RemoteException, DataStoreException, Unauthorized;
 
 	/**
 	* This both commits the transaction and closes the connection.

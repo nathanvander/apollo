@@ -7,7 +7,15 @@ import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.PointerType;
 import java.util.concurrent.atomic.AtomicInteger;
 import apollo.iface.DataStoreException;
-import java.io.Serializable;
+import apollo.iface.Unauthorized;
+import apollo.iface.ConnectionHandle;
+import apollo.util.Credentials;
+import apollo.kernel.Kernel;
+
+/**
+* This is changed to use the apollo 1.3 secure kernel.  This is not allowed to open
+* the connection directly.  Everything else should be almost the same.
+*/
 
 public class Connection {
 	//class initializer
@@ -15,17 +23,10 @@ public class Connection {
 		api=(SQLITE_API)Native.loadLibrary("sqlite3",SQLITE_API.class,W32APIOptions.DEFAULT_OPTIONS);
 	}
 
-
-	public static class Handle extends PointerType implements Serializable {
-		public Handle(Pointer p) {
-			super(p);
-		}
-	}
-
 	public static SQLITE_API api;
 	private static AtomicInteger counter=new AtomicInteger();
 	private int id;
-	private Handle handle;
+	private ConnectionHandle handle;
 	private boolean closed=false;
 	private long time_created;
 
@@ -42,32 +43,15 @@ public class Connection {
 	}
 	//==============================================
 
-	public Connection(String filename) throws DataStoreException {
-		handle=open(filename);
+	public Connection(Credentials user) throws DataStoreException, Unauthorized {
+		handle=Kernel.instance().login(user);
+
 		id=counter.incrementAndGet();	//equivalent of ++counter;
 		time_created=System.currentTimeMillis();
 		System.out.println("connection #"+id+" created in thread "+Thread.currentThread().getId());
 	}
 
-	protected Handle getHandle() {return handle;}
-
-	//returns a pointer to the connection object
-	private static Handle open(String filename) throws DataStoreException {
-		byte[] fn=getByteArray(filename);
-		PointerByReference ppDb=new PointerByReference();
-		int flags= api.SQLITE_OPEN_READWRITE | api.SQLITE_OPEN_CREATE | api.SQLITE_OPEN_NOMUTEX;
-		int rc=api.sqlite3_open_v2(fn,ppDb,flags,null);
-		if (rc!=0) {
-			throw new DataStoreException("unable to open database file: "+filename,rc);
-		} else {
-			Pointer pdb=ppDb.getValue();
-			if (pdb==null) {
-				//probably won't happen
-				throw new DataStoreException("pointer to connection is null",api.SQLITE_CANTOPEN);
-			}
-			return new Handle(pdb);
-		}
-	}
+	protected ConnectionHandle getHandle() {return handle;}
 
 	public int getId() {return id;}
 
@@ -133,25 +117,6 @@ public class Connection {
 	}
 	//===============================================================
 	public interface SQLITE_API extends Library {
-		//flags for open
-		public final static int SQLITE_OPEN_READONLY=         0x00000001;  /* Ok for sqlite3_open_v2() */
-		public final static int SQLITE_OPEN_READWRITE=        0x00000002;  /* Ok for sqlite3_open_v2() */
-		public final static int SQLITE_OPEN_CREATE=           0x00000004;  /* Ok for sqlite3_open_v2() */
-		public final static int SQLITE_OPEN_URI=              0x00000040;  /* Ok for sqlite3_open_v2() */
-		public final static int SQLITE_OPEN_MEMORY=           0x00000080;  /* Ok for sqlite3_open_v2() */
-		public final static int SQLITE_OPEN_NOMUTEX=          0x00008000;  /* Ok for sqlite3_open_v2() */
-
-		//error message
-		public final static int SQLITE_CANTOPEN=14;
-
-
-		//SQLITE_API int SQLITE_STDCALL sqlite3_open_v2(
-	  	//const char *filename,   /* Database filename (UTF-8) */
-	  	//sqlite3 **ppDb,         /* OUT: SQLite db handle */
-	  	//int flags,              /* Flags */
-	  	//const char *zVfs        /* Name of VFS module to use */
-		//);
-		public int sqlite3_open_v2(byte[] filename,PointerByReference ppDb,int flags,byte[] zVfs);
 
 		//SQLITE_API int SQLITE_STDCALL sqlite3_close(sqlite3*);
 		//public int sqlite3_close(Pointer pSqlite3);

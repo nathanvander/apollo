@@ -8,11 +8,13 @@ import java.rmi.*;
 * Compared to java.sql.ResultSet.  This is a little simpler.
 *
 * You have to call open() to open the cursor
+*
+* Update: I wish this had a better name, it conflicts with java.awt.Cursor
 */
 public interface Cursor extends Remote {
 	//return the select sql statement that this is running
 	public String getSql() throws RemoteException;
-	public void open() throws RemoteException, DataStoreException;
+	public void open() throws RemoteException, DataStoreException, Unauthorized;
 
 	//the hasNext() method actually loads the object, so don't skip it
 	public boolean hasNext() throws RemoteException, DataStoreException;

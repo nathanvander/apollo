@@ -1,5 +1,6 @@
 package apollo.iface;
 import java.rmi.*;
+import apollo.util.Credentials;
 
 /**
 * A DataStore is a simplified view of a Database.
@@ -19,10 +20,12 @@ import java.rmi.*;
 *  - change to DataObject interface to require displayNames() on fields.  This is so
 * 	dynamic dialogs can be created.
 *  - new types are allowed on DataObject fields.  See the notes there.
+*
+* Update 1/25/2017.  Updated to use semi-secure kernel.
 */
 public interface DataStore extends Remote {
 	//this is the version
-	public final static float VERSION = 1.20F;
+	public final static float VERSION = 1.30F;
 
 	/**
 	* Get the version of the underlying SQLite library.
@@ -32,12 +35,12 @@ public interface DataStore extends Remote {
 	/**
 	* Returns the name of the DB file on the server.
 	*/
-	public String getDatabaseFileName() throws RemoteException;
+	public String getDatabaseFileName() throws RemoteException, DataStoreException;
 
 	/**
 	* Connect to the Database and create a Transaction.  You can change multiple things at once in the transaction.
 	*/
-	public Transaction createTransaction() throws RemoteException,DataStoreException;
+	public Transaction createTransaction(Credentials user) throws RemoteException,DataStoreException, Unauthorized;
 
 	/**
 	* list all tables in the database and return a String array
@@ -46,39 +49,39 @@ public interface DataStore extends Remote {
 	*
 	* If the list is empty, this will return an emptry String array, not null
 	*/
-	public String[] listTables() throws RemoteException,DataStoreException;
+	public String[] listTables(Credentials user) throws RemoteException,DataStoreException, Unauthorized;
 
 	/**
 	* Get an object by the Key
 	*/
-	public DataObject get(Key k) throws RemoteException,DataStoreException;
+	public DataObject get(Credentials user,Key k) throws RemoteException,DataStoreException, Unauthorized;
 
 	/**
 	* Return the number of rows in the specified table
 	*/
-	public int rows(String tableName) throws RemoteException,DataStoreException;
+	public int rows(Credentials user,String tableName) throws RemoteException,DataStoreException, Unauthorized;
 
 
-	public Cursor selectAll(DataObject d) throws RemoteException,
-		DataStoreException;
+	public Cursor selectAll(Credentials user,DataObject d) throws RemoteException,
+		DataStoreException, Unauthorized;
 	/**
 	* This has limited capabilities on purpose.  It returns every DataObject in the database
 	* in the default sort order.  Of course, more options will be needed, but
 	* this will work for simple applications.
 	* This uses its own Connection and Statement
 	*/
-	public Cursor selectAll(DataObject d,int limit,int offset) throws RemoteException,
-		DataStoreException;
+	public Cursor selectAll(Credentials user,DataObject d,int limit,int offset) throws RemoteException,
+		DataStoreException, Unauthorized;
 
 	/**
 	* Return the data specified by the view.  The view object must be created first
 	*/
-	public Cursor view(ViewObject v) throws RemoteException, DataStoreException;
+	public Cursor view(Credentials user,ViewObject v) throws RemoteException, DataStoreException, Unauthorized;
 
 	/**
 	*  Select all objects from the table matching the whereClause.
 	*  The where clause should also specify the order and the limit, if any
 	*/
-	public Cursor selectWhere(DataObject d,String whereClause) throws RemoteException, DataStoreException;
+	public Cursor selectWhere(Credentials user,DataObject d,String whereClause) throws RemoteException, DataStoreException, Unauthorized;
 
 }

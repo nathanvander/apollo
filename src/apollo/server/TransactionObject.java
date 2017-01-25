@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.awt.TextArea;
 import java.awt.Choice;
 import apollo.util.DynamicSql;
+import apollo.util.Credentials;
 
 /**
 * A Transaction is used to make changes to the database.  This is run in its own connection, so you can have
@@ -22,13 +23,13 @@ import apollo.util.DynamicSql;
 * To make sure that the connection runs in its own thread, the connection isn't created until begin() is called.
 */
 public class TransactionObject implements Transaction {
-	private String filename;
+	private Credentials user;
 	private Connection conn;
 	private static AtomicInteger counter=new AtomicInteger(randomTwoDigit());
 	private int id;
 
-	public TransactionObject(String fn) throws DataStoreException {
-		filename=fn;
+	public TransactionObject(Credentials user) throws DataStoreException {
+		this.user=user;
 		id=counter.incrementAndGet();	//equivalent of ++counter;
 	}
 
@@ -50,8 +51,8 @@ public class TransactionObject implements Transaction {
 	* This both opens the connection and begins the transaction. This will create a lock on the entire
 	* file until it is released by committing the transaction.
 	*/
-	public void begin() throws RemoteException, DataStoreException {
-		conn=new Connection(filename);
+	public void begin() throws RemoteException, DataStoreException, Unauthorized {
+		conn=new Connection(user);
 		conn.exec("--begin transaction '"+getID()+"'");
 		conn.exec("BEGIN IMMEDIATE TRANSACTION");
 	}

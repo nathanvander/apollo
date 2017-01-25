@@ -8,6 +8,8 @@ import java.lang.reflect.Field;
 import java.security.Permission;
 import apollo.util.DateYMD;
 import apollo.util.DateYM;
+import apollo.util.Credentials;
+import apollo.kernel.Kernel;
 import java.math.BigDecimal;
 import java.awt.TextArea;
 import java.awt.Choice;
@@ -16,14 +18,13 @@ import java.awt.Choice;
 * This is the main class.  Because of SQLITE_BUSY result codes, every sql call needs its own transaction.
 */
 public class DataStoreEngine implements DataStore {
-	protected String dbFileName;
 
 	//this doesn't throw RemoteException because it can't be accessed remotely
-	public DataStoreEngine(String fn) throws DataStoreException {
-		dbFileName=fn;
+	//the root credentials are used only to install the new classes
+	public DataStoreEngine(Credentials root) throws DataStoreException, Unauthorized {
 
 		//initialize the MasterClass and Audit objects
-		Connection c=new Connection(fn);
+		Connection c=new Connection(root);
 		c.exec("BEGIN IMMEDIATE TRANSACTION");
 
 		String sql1=MasterClass.createMasterTableSql();
@@ -42,15 +43,15 @@ public class DataStoreEngine implements DataStore {
 	/**
 	* Returns the name of the DB file on the server.
 	*/
-	public String getDatabaseFileName() throws RemoteException {
-		return dbFileName;
+	public String getDatabaseFileName() throws RemoteException, DataStoreException {
+		return Kernel.instance().getDatabaseFileName();
 	}
 
 	/**
 	* Connect to the Database and create a Transaction.  You can change multiple things at once in the transaction.
 	*/
-	public Transaction createTransaction() throws RemoteException,DataStoreException {
-		TransactionObject tx=new TransactionObject(dbFileName);
+	public Transaction createTransaction(Credentials user) throws RemoteException,DataStoreException {
+		TransactionObject tx=new TransactionObject(user);
 		//we are not returning the transaction object, just its stub
 		Transaction stub =(Transaction)UnicastRemoteObject.exportObject(tx,0);
 		return stub;
@@ -58,9 +59,10 @@ public class DataStoreEngine implements DataStore {
 
 	//list all tables in the database and return a String array
 	//The top level interface will hold a Connection to do the listTables and get methods.
-	public String[] listTables() throws RemoteException,DataStoreException {
+	//we could limit this to the admin user
+	public String[] listTables(Credentials user) throws RemoteException,DataStoreException, Unauthorized {
 		Connection conn;	//local variable
-		conn=new Connection(dbFileName);
+		conn=new Connection(user);
 
 		//find number of rows
 		int numTables=0;
@@ -101,8 +103,8 @@ public class DataStoreEngine implements DataStore {
 	/**
 	* Get the DataObject specified by the given key.  Return null if not found
 	*/
-	public DataObject get(Key k) throws RemoteException,DataStoreException {
-		Connection conn=new Connection(dbFileName);
+	public DataObject get(Credentials user,Key k) throws RemoteException,DataStoreException, Unauthorized {
+		Connection conn=new Connection(user);
 
 		//get the classname
 		String className=MasterClass.getClassName(conn,k.tableName);
@@ -215,8 +217,8 @@ public class DataStoreEngine implements DataStore {
 	}
 
 	//is this necessary?
-	public int rows(String tableName) throws RemoteException,DataStoreException {
-		Connection conn=new Connection(dbFileName);
+	public int rows(Credentials user,String tableName) throws RemoteException,DataStoreException, Unauthorized {
+		Connection conn=new Connection(user);
 
 			String sql="SELECT count(*) FROM "+tableName;
 			Statement stmt = new Statement(conn,sql);
@@ -227,9 +229,8 @@ public class DataStoreEngine implements DataStore {
 		return i;
 	}
 
-	public Cursor selectAll(DataObject d) throws RemoteException,
-		DataStoreException {
-		return selectAll(d,100,0);
+	public Cursor selectAll(Credentials user,DataObject d) throws RemoteException, DataStoreException {
+		return selectAll(user,d,100,0);
 	}
 	/**
 	* This has limited capabilities on purpose.  It returns every DataObject in the database
@@ -239,16 +240,16 @@ public class DataStoreEngine implements DataStore {
 	*
 	* This uses a DataObject so the index() field can be used
 	*/
-	public Cursor selectAll(DataObject d,int limit,int offset) throws RemoteException,
+	public Cursor selectAll(Credentials user,DataObject d,int limit,int offset) throws RemoteException,
 		DataStoreException {
-		CursorObject cx=new CursorObject(dbFileName,d,limit,offset);
+		CursorObject cx=new CursorObject(user,d,limit,offset);
 		//we are not returning the transaction object, just its stub
 		Cursor stub =(Cursor)UnicastRemoteObject.exportObject(cx,0);
 		return stub;
 	}
 
-	public Cursor selectWhere(DataObject d,String whereClause) throws RemoteException, DataStoreException {
-		CursorObject cx=new CursorObject(dbFileName,d,whereClause);
+	public Cursor selectWhere(Credentials user,DataObject d,String whereClause) throws RemoteException, DataStoreException {
+		CursorObject cx=new CursorObject(user,d,whereClause);
 		//we are not returning the transaction object, just its stub
 		Cursor stub =(Cursor)UnicastRemoteObject.exportObject(cx,0);
 		return stub;
@@ -257,8 +258,8 @@ public class DataStoreEngine implements DataStore {
 	/**
 	* Return the data specified by the view.
 	*/
-	public Cursor view(ViewObject v) throws RemoteException, DataStoreException {
-		CursorObject cx=new CursorObject(dbFileName,v);
+	public Cursor view(Credentials user,ViewObject v) throws RemoteException, DataStoreException {
+		CursorObject cx=new CursorObject(user,v);
 		//we are not returning the transaction object, just its stub
 		Cursor stub =(Cursor)UnicastRemoteObject.exportObject(cx,0);
 		return stub;
@@ -267,12 +268,17 @@ public class DataStoreEngine implements DataStore {
 
 	//======================================================================
 	//start up the Engine and bind it to the registry
-    public static void main(String[] args) {
-		String filename="vos2.sqlite";  //hard-coded, would be very easy to have it passed in
+    public static void main(String[] args) throws DataStoreException {
+		//String filename="vos2.sqlite";  //hard-coded, would be very easy to have it passed in
+
+		//create default credentials for admin user
+		//with the default password
+		String publicKey=Kernel.instance().getPublicKey();
+		Credentials root=Credentials.encrypt(publicKey,"root",null,1234);
 
 		//we don't need this object here.  Any apps will either get it
 		//from the register or call create() directly
-		DataStore ds=create(filename);
+		DataStore ds=create(root);
 	}
 
 	/**
@@ -280,7 +286,7 @@ public class DataStoreEngine implements DataStore {
 	* Don't call this more than once per process.  If you need another handle,
 	* go to the RMI registry to get it.
 	*/
-	public static DataStore create(String filename) {
+	public static DataStore create(Credentials root) {
 		//remove all security
 		System.setSecurityManager(
 			new SecurityManager() {
@@ -299,7 +305,7 @@ public class DataStoreEngine implements DataStore {
 
         try {
             String name = "DataStore";
-            DataStore ds = new DataStoreEngine(filename);
+            DataStore ds = new DataStoreEngine(root);
             DataStore stub =
                 (DataStore)UnicastRemoteObject.exportObject(ds, 0);
             Registry registry = LocateRegistry.getRegistry();

@@ -6,6 +6,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
 import com.sun.jna.ptr.PointerByReference;
 import apollo.iface.DataStoreException;
+import apollo.iface.ConnectionHandle;
 
 /**
 * Statement.  A Statement is like a program that SQLite creates to run the SQL.  There can only be
@@ -35,7 +36,7 @@ public class Statement {
 	public Statement(Connection c,String sql) throws DataStoreException {
 		System.out.println(sql);
 		conn=c;
-		Connection.Handle ch=c.getHandle();
+		ConnectionHandle ch=c.getHandle();
 		PointerByReference ppStmt=new PointerByReference();
 		PointerByReference pzTail=new PointerByReference();
 		byte[] basql=Connection.getByteArray(sql);

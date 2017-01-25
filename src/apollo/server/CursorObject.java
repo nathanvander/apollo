@@ -6,6 +6,7 @@ import apollo.util.DateYMD;
 import apollo.util.DateYM;
 import java.awt.TextArea;
 import java.awt.Choice;
+import apollo.util.Credentials;
 
 
 /**
@@ -13,7 +14,7 @@ import java.awt.Choice;
 */
 
 public class CursorObject implements Cursor {
-	String filename;
+	Credentials user;
 	Connection conn;
 	Statement stmt;
 	DataObject d;
@@ -21,8 +22,8 @@ public class CursorObject implements Cursor {
 	String sql;
 
 	//use for a select all
-	public CursorObject(String fn,DataObject d,int limit,int offset) throws DataStoreException {
-		filename=fn;
+	public CursorObject(Credentials user,DataObject d,int limit,int offset) throws DataStoreException {
+		this.user=user;
 		this.d=d;
 
 		if (limit==0) {limit=100;}
@@ -36,8 +37,8 @@ public class CursorObject implements Cursor {
 	}
 
 	//use for a ViewObject
-	public CursorObject(String fn,ViewObject v) {
-		filename=fn;
+	public CursorObject(Credentials user,ViewObject v) {
+		this.user=user;
 		this.v=v;
 
 		//problem.  If you have defined the ViewObject, you might as well use it.
@@ -49,8 +50,8 @@ public class CursorObject implements Cursor {
 	//this can also be called on a ViewObject, if the ViewObject has defined the getTableName()
 	//to the View name.  There will be 2 where clauses, the where clause of the view and the where
 	//clause of the select.  The database is smart enough to figure this out, I think
-	public CursorObject(String fn,DataObject d,String whereClause) {
-		filename=fn;
+	public CursorObject(Credentials user,DataObject d,String whereClause) {
+		this.user=user;
 		this.d=d;
 		String sql="SELECT * FROM "+d.getTableName()+" "+whereClause;
 		this.sql=sql;
@@ -63,8 +64,8 @@ public class CursorObject implements Cursor {
 	//this seems like it could be part of the constructor,
 	//but we want to make opening the connection separate from constructing it to make
 	//sure it is in its own thread, separate from that of the parent
-	public void open() throws RemoteException, DataStoreException {
-		conn=new Connection(filename);
+	public void open() throws RemoteException, DataStoreException, Unauthorized {
+		conn=new Connection(user);
 		stmt=new Statement(conn,sql);
 	}
 
