@@ -14,3 +14,7 @@ The code is complete and is usable.  We can call it version 1.0.
 
 Update 1/19/2017
 The version is now 1.2.  I removed the sequence table, so it uses the sqlite3_last_insert_rowid function to get ids.  Also, I added an Audit table to record update and delete statements.
+
+Update 1/25/2017.  
+Released version 1.3.  This has a semi-secure kernel using 16-bit(!) public key encryption.  This is intended more as a proof of
+concept than to be really secure.
